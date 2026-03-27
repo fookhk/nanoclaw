@@ -87,22 +87,19 @@ export function startCredentialProxy(
         }
 
         const upstreamOpts: RequestOptions = {
-            hostname: upstreamUrl.hostname,
-            port: upstreamUrl.port || (isHttps ? 443 : 80),
-            path: req.url,
-            method: req.method,
-            headers,
-            agent,
-          };
+          hostname: upstreamUrl.hostname,
+          port: upstreamUrl.port || (isHttps ? 443 : 80),
+          path: req.url,
+          method: req.method,
+          headers,
+          agent,
+        };
 
         const doRequest = (opts: RequestOptions, retrying: boolean) => {
-          const upstream = makeRequest(
-            opts,
-            (upRes) => {
-              res.writeHead(upRes.statusCode!, upRes.headers);
-              upRes.pipe(res);
-            },
-          );
+          const upstream = makeRequest(opts, (upRes) => {
+            res.writeHead(upRes.statusCode!, upRes.headers);
+            upRes.pipe(res);
+          });
 
           // Enable TCP keepalive probes on the upstream socket so NAT/firewall
           // devices don't drop idle streaming connections during long tool calls
@@ -115,7 +112,10 @@ export function startCredentialProxy(
             // ECONNRESET on a fresh request means the pooled keep-alive
             // socket went stale while idle. Retry once with a fresh socket.
             if (err.code === 'ECONNRESET' && !retrying && !res.headersSent) {
-              logger.warn({ url: req.url }, 'Credential proxy stale socket, retrying');
+              logger.warn(
+                { url: req.url },
+                'Credential proxy stale socket, retrying',
+              );
               doRequest({ ...opts, agent: false }, true);
               return;
             }
