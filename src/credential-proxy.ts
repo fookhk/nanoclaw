@@ -86,41 +86,54 @@ export function startCredentialProxy(
           }
         }
 
-        const upstream = makeRequest(
-          {
+        const upstreamOpts: RequestOptions = {
             hostname: upstreamUrl.hostname,
             port: upstreamUrl.port || (isHttps ? 443 : 80),
             path: req.url,
             method: req.method,
             headers,
             agent,
-          } as RequestOptions,
-          (upRes) => {
-            res.writeHead(upRes.statusCode!, upRes.headers);
-            upRes.pipe(res);
-          },
-        );
+          };
 
-        // Enable TCP keepalive probes on the upstream socket so NAT/firewall
-        // devices don't drop idle streaming connections during long tool calls
-        // (e.g. WebSearch). Probes fire every 10s after 5s of inactivity.
-        upstream.on('socket', (socket) => {
-          socket.setKeepAlive(true, 5000);
-        });
-
-        upstream.on('error', (err) => {
-          logger.error(
-            { err, url: req.url },
-            'Credential proxy upstream error',
+        const doRequest = (opts: RequestOptions, retrying: boolean) => {
+          const upstream = makeRequest(
+            opts,
+            (upRes) => {
+              res.writeHead(upRes.statusCode!, upRes.headers);
+              upRes.pipe(res);
+            },
           );
-          if (!res.headersSent) {
-            res.writeHead(502);
-            res.end('Bad Gateway');
-          }
-        });
 
-        upstream.write(body);
-        upstream.end();
+          // Enable TCP keepalive probes on the upstream socket so NAT/firewall
+          // devices don't drop idle streaming connections during long tool calls
+          // (e.g. WebSearch). Probes fire every 10s after 5s of inactivity.
+          upstream.on('socket', (socket) => {
+            socket.setKeepAlive(true, 5000);
+          });
+
+          upstream.on('error', (err: NodeJS.ErrnoException) => {
+            // ECONNRESET on a fresh request means the pooled keep-alive
+            // socket went stale while idle. Retry once with a fresh socket.
+            if (err.code === 'ECONNRESET' && !retrying && !res.headersSent) {
+              logger.warn({ url: req.url }, 'Credential proxy stale socket, retrying');
+              doRequest({ ...opts, agent: false }, true);
+              return;
+            }
+            logger.error(
+              { err, url: req.url },
+              'Credential proxy upstream error',
+            );
+            if (!res.headersSent) {
+              res.writeHead(502);
+              res.end('Bad Gateway');
+            }
+          });
+
+          upstream.write(body);
+          upstream.end();
+        };
+
+        doRequest(upstreamOpts, false);
       });
     });
 
