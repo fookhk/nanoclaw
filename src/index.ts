@@ -815,10 +815,28 @@ async function main(): Promise<void> {
   await statusTracker.recover();
   queue.setProcessMessagesFn(processGroupMessages);
   recoverPendingMessages();
-  startMessageLoop().catch((err) => {
-    logger.fatal({ err }, 'Message loop crashed unexpectedly');
-    process.exit(1);
-  });
+  // Restart the message loop on crash with exponential backoff (cap 60s).
+  // Exits after 5 consecutive failures within 2 minutes to avoid spinning
+  // silently in a broken state (lets the process manager restart cleanly).
+  let loopFailures = 0;
+  let lastFailureTime = 0;
+  const runLoop = () => {
+    messageLoopRunning = false;
+    startMessageLoop().catch((err) => {
+      const now = Date.now();
+      if (now - lastFailureTime > 120_000) loopFailures = 0;
+      loopFailures++;
+      lastFailureTime = now;
+      if (loopFailures >= 5) {
+        logger.fatal({ err, loopFailures }, 'Message loop crashed 5 times — giving up');
+        process.exit(1);
+      }
+      const delay = Math.min(1000 * 2 ** (loopFailures - 1), 60_000);
+      logger.error({ err, loopFailures, retryInMs: delay }, 'Message loop crashed, restarting');
+      setTimeout(runLoop, delay);
+    });
+  };
+  runLoop();
 }
 
 // Guard: only run when executed directly, not when imported by tests

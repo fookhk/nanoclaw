@@ -17,6 +17,7 @@ import {
   Agent as HttpAgent,
   RequestOptions,
 } from 'http';
+import { pipeline } from 'stream';
 
 import { readEnvFile } from './env.js';
 import { logger } from './logger.js';
@@ -98,7 +99,22 @@ export function startCredentialProxy(
         const doRequest = (opts: RequestOptions, retrying: boolean) => {
           const upstream = makeRequest(opts, (upRes) => {
             res.writeHead(upRes.statusCode!, upRes.headers);
-            upRes.pipe(res);
+
+            // If the client disconnects, destroy the upstream response to free
+            // the socket immediately rather than streaming into the void.
+            res.on('close', () => upRes.destroy());
+
+            // Use pipeline instead of pipe so errors on either stream are
+            // caught and both sides are cleaned up (handles "socket hang up"
+            // mid-stream that pipe silently drops).
+            pipeline(upRes, res, (err) => {
+              if (err && (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_DESTROYED') {
+                logger.error(
+                  { err, url: req.url },
+                  'Credential proxy stream error',
+                );
+              }
+            });
           });
 
           // Enable TCP keepalive probes on the upstream socket so NAT/firewall
