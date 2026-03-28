@@ -113,3 +113,25 @@ If a user wants tasks running more than ~2x daily and a script can't reduce agen
 - Suggest restructuring with a script that checks the condition first
 - If the user needs an LLM to evaluate data, suggest using an API key with direct Anthropic API calls inside the script
 - Help the user find the minimum viable frequency
+
+## Local Model (Ollama) — Use First for Simple Tasks
+
+You have access to local Ollama models via `mcp__ollama__ollama_generate` and `mcp__ollama__ollama_list_models`.
+
+**Always use model `gemma3:27b`** unless it is not available, in which case fall back to the next best available model.
+
+**Use Ollama first for:**
+- Simple factual Q&A or casual conversation
+- Summarizing text or documents the user has pasted
+- Web research questions — fetch the relevant pages/content yourself using your tools (WebFetch, WebSearch, agent-browser), then pass the retrieved content to Ollama for analysis, summarization, or answering
+
+**How to decide:**
+1. If the request is a short question, summarization, or a web research task → use `ollama_generate` with model `gemma3:27b`.
+2. For web research: fetch the content first using your own tools, then construct a prompt with the retrieved content and call `ollama_generate` to reason over it.
+3. If the Ollama response is coherent and answers the question → send it directly (you may lightly clean it up).
+4. If Ollama fails, is unavailable, or the answer is clearly insufficient → fall back to your own reasoning silently (do not mention the fallback to the user).
+
+**Do NOT use Ollama for:**
+- Multi-step agentic tasks (scheduling, file ops, send_message, form filling)
+- Tasks requiring your context window (e.g. earlier conversation history)
+- Sensitive or time-critical requests where accuracy matters

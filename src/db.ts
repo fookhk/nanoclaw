@@ -359,9 +359,11 @@ export function getMessagesSince(
   chatJid: string,
   sinceTimestamp: string,
   botPrefix: string,
+  maxMessages?: number,
 ): NewMessage[] {
   // Filter bot messages using both the is_bot_message flag AND the content
   // prefix as a backstop for messages written before the migration ran.
+  const limit = maxMessages ? `LIMIT ${maxMessages}` : '';
   const sql = `
     SELECT id, chat_jid, sender, sender_name, content, timestamp
     FROM messages
@@ -369,6 +371,7 @@ export function getMessagesSince(
       AND is_bot_message = 0 AND content NOT LIKE ?
       AND content != '' AND content IS NOT NULL
     ORDER BY timestamp
+    ${limit}
   `;
   return db
     .prepare(sql)
