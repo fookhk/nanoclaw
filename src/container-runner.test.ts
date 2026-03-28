@@ -17,6 +17,8 @@ vi.mock('./config.js', () => ({
   IDLE_TIMEOUT: 1800000, // 30min
   TIMEZONE: 'America/Los_Angeles',
   OLLAMA_ADMIN_TOOLS: false,
+  LAZYLIBRARIAN_URL: '',
+  LAZYLIBRARIAN_API_KEY: '',
 }));
 
 // Mock logger
