@@ -55,6 +55,7 @@ vi.mock('./mount-security.js', () => ({
 // Mock container-runtime
 vi.mock('./container-runtime.js', () => ({
   CONTAINER_RUNTIME_BIN: 'docker',
+  CONTAINER_HOST_GATEWAY: '172.17.0.1',
   hostGatewayArgs: () => [],
   readonlyMountArgs: (h: string, c: string) => ['-v', `${h}:${c}:ro`],
   stopContainer: vi.fn(),
@@ -70,7 +71,6 @@ vi.mock('@onecli-sh/sdk', () => ({
       .mockResolvedValue({ name: 'test', identifier: 'test', created: true });
   },
 }));
-
 
 // Create a controllable fake ChildProcess
 function createFakeProcess() {
