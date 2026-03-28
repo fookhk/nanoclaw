@@ -59,6 +59,12 @@ export const CREDENTIAL_PROXY_PORT = parseInt(
   process.env.CREDENTIAL_PROXY_PORT || '3001',
   10,
 );
+export const ONECLI_URL =
+  process.env.ONECLI_URL || envConfig.ONECLI_URL || 'http://localhost:10254';
+export const MAX_MESSAGES_PER_PROMPT = Math.max(
+  1,
+  parseInt(process.env.MAX_MESSAGES_PER_PROMPT || '10', 10) || 10,
+);
 export const IPC_POLL_INTERVAL = 1000;
 export const IDLE_TIMEOUT = parseInt(process.env.IDLE_TIMEOUT || '300000', 10); // 5min default — how long to keep container alive after last result
 export const MAX_CONCURRENT_CONTAINERS = Math.max(
