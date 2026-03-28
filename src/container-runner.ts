@@ -15,6 +15,8 @@ import {
   DATA_DIR,
   GROUPS_DIR,
   IDLE_TIMEOUT,
+  LAZYLIBRARIAN_API_KEY,
+  LAZYLIBRARIAN_URL,
   OLLAMA_ADMIN_TOOLS,
   TIMEZONE,
 } from './config.js';
@@ -250,6 +252,14 @@ function buildContainerArgs(
   // Forward Ollama admin tools flag if enabled
   if (OLLAMA_ADMIN_TOOLS) {
     args.push('-e', 'OLLAMA_ADMIN_TOOLS=true');
+  }
+
+  // LazyLibrarian integration
+  if (LAZYLIBRARIAN_URL) {
+    args.push('-e', `LAZYLIBRARIAN_URL=${LAZYLIBRARIAN_URL}`);
+  }
+  if (LAZYLIBRARIAN_API_KEY) {
+    args.push('-e', `LAZYLIBRARIAN_API_KEY=${LAZYLIBRARIAN_API_KEY}`);
   }
 
   // Route API traffic through the credential proxy (containers never see real secrets)

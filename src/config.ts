@@ -12,6 +12,8 @@ const envConfig = readEnvFile([
   'ASSISTANT_HAS_OWN_NUMBER',
   'OLLAMA_ADMIN_TOOLS',
   'TZ',
+  'LAZYLIBRARIAN_URL',
+  'LAZYLIBRARIAN_API_KEY',
 ]);
 
 export const ASSISTANT_NAME =
@@ -103,3 +105,8 @@ function resolveConfigTimezone(): string {
   return 'UTC';
 }
 export const TIMEZONE = resolveConfigTimezone();
+
+export const LAZYLIBRARIAN_URL =
+  process.env.LAZYLIBRARIAN_URL || envConfig.LAZYLIBRARIAN_URL || '';
+export const LAZYLIBRARIAN_API_KEY =
+  process.env.LAZYLIBRARIAN_API_KEY || envConfig.LAZYLIBRARIAN_API_KEY || '';
