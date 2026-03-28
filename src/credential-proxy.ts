@@ -108,7 +108,10 @@ export function startCredentialProxy(
             // caught and both sides are cleaned up (handles "socket hang up"
             // mid-stream that pipe silently drops).
             pipeline(upRes, res, (err) => {
-              if (err && (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_DESTROYED') {
+              if (
+                err &&
+                (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_DESTROYED'
+              ) {
                 logger.error(
                   { err, url: req.url },
                   'Credential proxy stream error',

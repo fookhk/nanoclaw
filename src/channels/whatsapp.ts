@@ -24,6 +24,16 @@ import {
   updateChatName,
 } from '../db.js';
 import { logger } from '../logger.js';
+
+// Baileys ILogger adapter — wraps our lightweight logger with the child/level/trace
+// methods that Baileys expects at runtime.
+const baileysLogger = Object.assign({}, logger, {
+  level: 'warn' as const,
+  child: () => baileysLogger,
+  trace: (dataOrMsg: Record<string, unknown> | string, msg?: string) =>
+    logger.debug(dataOrMsg as never, msg),
+});
+
 import { registerChannel, ChannelOpts } from './registry.js';
 import {
   Channel,
@@ -79,10 +89,10 @@ export class WhatsAppChannel implements Channel {
       version,
       auth: {
         creds: state.creds,
-        keys: makeCacheableSignalKeyStore(state.keys, logger),
+        keys: makeCacheableSignalKeyStore(state.keys, baileysLogger),
       },
       printQRInTerminal: false,
-      logger,
+      logger: baileysLogger,
       browser: Browsers.macOS('Chrome'),
     });
 

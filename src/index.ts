@@ -828,11 +828,17 @@ async function main(): Promise<void> {
       loopFailures++;
       lastFailureTime = now;
       if (loopFailures >= 5) {
-        logger.fatal({ err, loopFailures }, 'Message loop crashed 5 times — giving up');
+        logger.fatal(
+          { err, loopFailures },
+          'Message loop crashed 5 times — giving up',
+        );
         process.exit(1);
       }
       const delay = Math.min(1000 * 2 ** (loopFailures - 1), 60_000);
-      logger.error({ err, loopFailures, retryInMs: delay }, 'Message loop crashed, restarting');
+      logger.error(
+        { err, loopFailures, retryInMs: delay },
+        'Message loop crashed, restarting',
+      );
       setTimeout(runLoop, delay);
     });
   };
