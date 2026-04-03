@@ -221,6 +221,8 @@ SCHEDULE VALUE FORMAT (all times are LOCAL timezone):
     const targetJid =
       isMain && args.target_group_jid ? args.target_group_jid : chatJid;
 
+    const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     const data = {
       type: 'schedule_task',
       prompt: args.prompt,
@@ -239,7 +241,7 @@ SCHEDULE VALUE FORMAT (all times are LOCAL timezone):
       content: [
         {
           type: 'text' as const,
-          text: `Task scheduled (${filename}): ${args.schedule_type} - ${args.schedule_value}`,
+          text: `Task ${taskId} scheduled: ${args.schedule_type} - ${args.schedule_value}`,
         },
       ],
     };
@@ -405,18 +407,26 @@ server.tool(
     script: z
       .string()
       .optional()
-      .describe('New script for the task. Set to empty string to remove the script.'),
+      .describe(
+        'New script for the task. Set to empty string to remove the script.',
+      ),
   },
   async (args) => {
     // Validate schedule_value if provided
-    if (args.schedule_type === 'cron' || (!args.schedule_type && args.schedule_value)) {
+    if (
+      args.schedule_type === 'cron' ||
+      (!args.schedule_type && args.schedule_value)
+    ) {
       if (args.schedule_value) {
         try {
           CronExpressionParser.parse(args.schedule_value);
         } catch {
           return {
             content: [
-              { type: 'text' as const, text: `Invalid cron: "${args.schedule_value}".` },
+              {
+                type: 'text' as const,
+                text: `Invalid cron: "${args.schedule_value}".`,
+              },
             ],
             isError: true,
           };
@@ -428,7 +438,10 @@ server.tool(
       if (isNaN(ms) || ms <= 0) {
         return {
           content: [
-            { type: 'text' as const, text: `Invalid interval: "${args.schedule_value}".` },
+            {
+              type: 'text' as const,
+              text: `Invalid interval: "${args.schedule_value}".`,
+            },
           ],
           isError: true,
         };
@@ -444,13 +457,20 @@ server.tool(
     };
     if (args.prompt !== undefined) data.prompt = args.prompt;
     if (args.script !== undefined) data.script = args.script;
-    if (args.schedule_type !== undefined) data.schedule_type = args.schedule_type;
-    if (args.schedule_value !== undefined) data.schedule_value = args.schedule_value;
+    if (args.schedule_type !== undefined)
+      data.schedule_type = args.schedule_type;
+    if (args.schedule_value !== undefined)
+      data.schedule_value = args.schedule_value;
 
     writeIpcFile(TASKS_DIR, data);
 
     return {
-      content: [{ type: 'text' as const, text: `Task ${args.task_id} update requested.` }],
+      content: [
+        {
+          type: 'text' as const,
+          text: `Task ${args.task_id} update requested.`,
+        },
+      ],
     };
   },
 );
