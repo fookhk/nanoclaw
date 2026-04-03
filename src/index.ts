@@ -9,6 +9,7 @@ import {
   GROUPS_DIR,
   IDLE_TIMEOUT,
   MAX_MESSAGES_PER_PROMPT,
+  OLLAMA_ROUTER_ENABLED,
   ONECLI_URL,
   POLL_INTERVAL,
   TIMEZONE,
@@ -73,6 +74,7 @@ import { Channel, NewMessage, RegisteredGroup } from './types.js';
 import { StatusTracker } from './status-tracker.js';
 import { parseImageReferences } from './image.js';
 import { logger } from './logger.js';
+import { routeWithOllama } from './ollama-router.js';
 
 // Re-export for backwards compatibility during refactor
 export { escapeXml, formatMessages } from './router.js';
@@ -303,6 +305,26 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
 
   const prompt = formatMessages(missedMessages, TIMEZONE);
   const imageAttachments = parseImageReferences(missedMessages);
+
+  // Ollama pre-routing: for non-main groups, attempt a local response before
+  // spinning up the Claude container. Falls through on COMPLEX or any error.
+  if (OLLAMA_ROUTER_ENABLED && !isMainGroup) {
+    const lastUserMsg = missedMessages
+      .filter((m) => !m.is_from_me && !m.is_bot_message)
+      .at(-1)?.content;
+    if (lastUserMsg) {
+      const ollamaReply = await routeWithOllama(lastUserMsg);
+      if (ollamaReply !== null) {
+        lastAgentTimestamp[chatJid] =
+          missedMessages[missedMessages.length - 1].timestamp;
+        saveState();
+        await channel.setTyping?.(chatJid, false);
+        await channel.sendMessage(chatJid, ollamaReply);
+        statusTracker.markAllDone(chatJid);
+        return true;
+      }
+    }
+  }
 
   // Advance cursor so the piping path in startMessageLoop won't re-fetch
   // these messages. Save the old cursor so we can roll back on error.
