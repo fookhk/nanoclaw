@@ -74,7 +74,10 @@ export async function routeWithOllama(
 
   const isBasic = classification.trim().toUpperCase().startsWith('BASIC');
   if (!isBasic) {
-    logger.debug({ classification: classification.trim() }, 'Ollama router: COMPLEX → container');
+    logger.debug(
+      { classification: classification.trim() },
+      'Ollama router: COMPLEX → container',
+    );
     return null;
   }
 

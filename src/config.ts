@@ -27,11 +27,14 @@ export const ASSISTANT_HAS_OWN_NUMBER =
 export const OLLAMA_ADMIN_TOOLS =
   (process.env.OLLAMA_ADMIN_TOOLS || envConfig.OLLAMA_ADMIN_TOOLS) === 'true';
 export const OLLAMA_ROUTER_ENABLED =
-  (process.env.OLLAMA_ROUTER_ENABLED || envConfig.OLLAMA_ROUTER_ENABLED) === 'true';
+  (process.env.OLLAMA_ROUTER_ENABLED || envConfig.OLLAMA_ROUTER_ENABLED) ===
+  'true';
 export const OLLAMA_URL =
   process.env.OLLAMA_URL || envConfig.OLLAMA_URL || 'http://localhost:11434';
 export const OLLAMA_ROUTER_MODEL =
-  process.env.OLLAMA_ROUTER_MODEL || envConfig.OLLAMA_ROUTER_MODEL || 'llama3.2';
+  process.env.OLLAMA_ROUTER_MODEL ||
+  envConfig.OLLAMA_ROUTER_MODEL ||
+  'llama3.2';
 export const POLL_INTERVAL = 2000;
 export const SCHEDULER_POLL_INTERVAL = 60000;
 
