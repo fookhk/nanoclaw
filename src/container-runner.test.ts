@@ -63,15 +63,9 @@ vi.mock('./container-runtime.js', () => ({
   stopContainer: vi.fn(),
 }));
 
-// Mock OneCLI SDK
-vi.mock('@onecli-sh/sdk', () => ({
-  OneCLI: class {
-    applyContainerConfig = vi.fn().mockResolvedValue(true);
-    createAgent = vi.fn().mockResolvedValue({ id: 'test' });
-    ensureAgent = vi
-      .fn()
-      .mockResolvedValue({ name: 'test', identifier: 'test', created: true });
-  },
+// Mock credential-proxy
+vi.mock('./credential-proxy.js', () => ({
+  detectAuthMode: vi.fn(() => 'api-key'),
 }));
 
 // Create a controllable fake ChildProcess
