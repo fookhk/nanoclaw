@@ -281,6 +281,7 @@ function buildContainerArgs(
     args.push('-e', `LAZYLIBRARIAN_API_KEY=${LAZYLIBRARIAN_API_KEY}`);
   }
 
+
   // Route API traffic through the credential proxy (containers never see real secrets)
   args.push(
     '-e',
