@@ -18,6 +18,8 @@ import {
   LAZYLIBRARIAN_API_KEY,
   LAZYLIBRARIAN_URL,
   OLLAMA_ADMIN_TOOLS,
+  ONECLI_API_KEY,
+  ONECLI_URL,
   TIMEZONE,
 } from './config.js';
 import { resolveGroupFolderPath, resolveGroupIpcPath } from './group-folder.js';
