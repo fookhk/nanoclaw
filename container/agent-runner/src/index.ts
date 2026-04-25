@@ -21,6 +21,7 @@ import {
   query,
   HookCallback,
   PreCompactHookInput,
+  SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 import { fileURLToPath } from 'url';
 
@@ -37,9 +38,10 @@ interface ContainerInput {
   imageAttachments?: Array<{ relativePath: string; mediaType: string }>;
 }
 
+type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 interface ImageContentBlock {
   type: 'image';
-  source: { type: 'base64'; media_type: string; data: string };
+  source: { type: 'base64'; media_type: ImageMediaType; data: string };
 }
 interface TextContentBlock {
   type: 'text';
@@ -65,13 +67,6 @@ interface SessionsIndex {
   entries: SessionEntry[];
 }
 
-interface SDKUserMessage {
-  type: 'user';
-  message: { role: 'user'; content: string | ContentBlock[] };
-  parent_tool_use_id: null;
-  session_id: string;
-}
-
 const IPC_INPUT_DIR = '/workspace/ipc/input';
 const IPC_INPUT_CLOSE_SENTINEL = path.join(IPC_INPUT_DIR, '_close');
 const IPC_POLL_MS = 500;
@@ -81,7 +76,7 @@ const IPC_POLL_MS = 500;
  * Keeps the iterable alive until end() is called, preventing isSingleUserTurn.
  */
 class MessageStream {
-  private queue: SDKUserMessage[] = [];
+  private queue: unknown[] = [];
   private waiting: (() => void) | null = null;
   private done = false;
 
@@ -113,7 +108,7 @@ class MessageStream {
   async *[Symbol.asyncIterator](): AsyncGenerator<SDKUserMessage> {
     while (true) {
       while (this.queue.length > 0) {
-        yield this.queue.shift()!;
+        yield this.queue.shift() as SDKUserMessage;
       }
       if (this.done) return;
       await new Promise<void>((r) => {
@@ -415,7 +410,7 @@ async function runQuery(
       const imgPath = path.join('/workspace/group', img.relativePath);
       try {
         const data = fs.readFileSync(imgPath).toString('base64');
-        blocks.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data } });
+        blocks.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType as ImageMediaType, data } });
       } catch (err) {
         log(`Failed to load image: ${imgPath}`);
       }
