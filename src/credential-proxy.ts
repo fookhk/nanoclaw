@@ -12,15 +12,11 @@
  */
 import { createServer, Server } from 'http';
 import { request as httpsRequest, Agent as HttpsAgent } from 'https';
-import {
-  request as httpRequest,
-  Agent as HttpAgent,
-  RequestOptions,
-} from 'http';
+import { request as httpRequest, Agent as HttpAgent, RequestOptions } from 'http';
 import { pipeline } from 'stream';
 
 import { readEnvFile } from './env.js';
-import { logger } from './logger.js';
+import { log } from './log.js';
 
 export type AuthMode = 'api-key' | 'oauth';
 
@@ -28,10 +24,7 @@ export interface ProxyConfig {
   authMode: AuthMode;
 }
 
-export function startCredentialProxy(
-  port: number,
-  host = '127.0.0.1',
-): Promise<Server> {
+export function startCredentialProxy(port: number, host = '127.0.0.1'): Promise<Server> {
   const secrets = readEnvFile([
     'ANTHROPIC_API_KEY',
     'CLAUDE_CODE_OAUTH_TOKEN',
@@ -40,12 +33,9 @@ export function startCredentialProxy(
   ]);
 
   const authMode: AuthMode = secrets.ANTHROPIC_API_KEY ? 'api-key' : 'oauth';
-  const oauthToken =
-    secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_AUTH_TOKEN;
+  const oauthToken = secrets.CLAUDE_CODE_OAUTH_TOKEN || secrets.ANTHROPIC_AUTH_TOKEN;
 
-  const upstreamUrl = new URL(
-    secrets.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
-  );
+  const upstreamUrl = new URL(secrets.ANTHROPIC_BASE_URL || 'https://api.anthropic.com');
   const isHttps = upstreamUrl.protocol === 'https:';
   const agent = isHttps
     ? new HttpsAgent({ keepAlive: true, keepAliveMsecs: 10000 })
@@ -58,12 +48,11 @@ export function startCredentialProxy(
       req.on('data', (c) => chunks.push(c));
       req.on('end', () => {
         const body = Buffer.concat(chunks);
-        const headers: Record<string, string | number | string[] | undefined> =
-          {
-            ...(req.headers as Record<string, string>),
-            host: upstreamUrl.host,
-            'content-length': body.length,
-          };
+        const headers: Record<string, string | number | string[] | undefined> = {
+          ...(req.headers as Record<string, string>),
+          host: upstreamUrl.host,
+          'content-length': body.length,
+        };
 
         // Strip hop-by-hop headers that must not be forwarded by proxies
         delete headers['connection'];
@@ -108,14 +97,8 @@ export function startCredentialProxy(
             // caught and both sides are cleaned up (handles "socket hang up"
             // mid-stream that pipe silently drops).
             pipeline(upRes, res, (err) => {
-              if (
-                err &&
-                (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_DESTROYED'
-              ) {
-                logger.error(
-                  { err, url: req.url },
-                  'Credential proxy stream error',
-                );
+              if (err && (err as NodeJS.ErrnoException).code !== 'ERR_STREAM_DESTROYED') {
+                log.error('Credential proxy stream error', { err, url: req.url });
               }
             });
           });
@@ -131,17 +114,11 @@ export function startCredentialProxy(
             // ECONNRESET on a fresh request means the pooled keep-alive
             // socket went stale while idle. Retry once with a fresh socket.
             if (err.code === 'ECONNRESET' && !retrying && !res.headersSent) {
-              logger.warn(
-                { url: req.url },
-                'Credential proxy stale socket, retrying',
-              );
+              log.warn('Credential proxy stale socket, retrying', { url: req.url });
               doRequest({ ...opts, agent: false }, true);
               return;
             }
-            logger.error(
-              { err, url: req.url },
-              'Credential proxy upstream error',
-            );
+            log.error('Credential proxy upstream error', { err, url: req.url });
             if (!res.headersSent) {
               res.writeHead(502);
               res.end('Bad Gateway');
@@ -157,7 +134,7 @@ export function startCredentialProxy(
     });
 
     server.listen(port, host, () => {
-      logger.info({ port, host, authMode }, 'Credential proxy started');
+      log.info('Credential proxy started', { port, host, authMode });
       resolve(server);
     });
 

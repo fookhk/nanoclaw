@@ -88,9 +88,7 @@ import { readEnvFile } from '../env.js';
 
 // --- Test helpers ---
 
-function createTestOpts(
-  overrides?: Partial<SlackChannelOpts>,
-): SlackChannelOpts {
+function createTestOpts(overrides?: Partial<SlackChannelOpts>): SlackChannelOpts {
   return {
     onMessage: vi.fn(),
     onChatMetadata: vi.fn(),
@@ -132,9 +130,7 @@ function currentApp() {
   return appRef.current;
 }
 
-async function triggerMessageEvent(
-  event: ReturnType<typeof createMessageEvent>,
-) {
+async function triggerMessageEvent(event: ReturnType<typeof createMessageEvent>) {
   const handler = currentApp().eventHandlers.get('message');
   if (handler) await handler({ event });
 }
@@ -396,9 +392,7 @@ describe('SlackChannel', () => {
       await channel.connect();
 
       // First message — API call
-      await triggerMessageEvent(
-        createMessageEvent({ user: 'U_USER_456', text: 'First' }),
-      );
+      await triggerMessageEvent(createMessageEvent({ user: 'U_USER_456', text: 'First' }));
       // Second message — should use cache
       await triggerMessageEvent(
         createMessageEvent({
@@ -416,9 +410,7 @@ describe('SlackChannel', () => {
       const channel = new SlackChannel(opts);
       await channel.connect();
 
-      currentApp().client.users.info.mockRejectedValueOnce(
-        new Error('API error'),
-      );
+      currentApp().client.users.info.mockRejectedValueOnce(new Error('API error'));
 
       const event = createMessageEvent({ user: 'U_UNKNOWN', text: 'Hi' });
       await triggerMessageEvent(event);
@@ -612,14 +604,10 @@ describe('SlackChannel', () => {
       const channel = new SlackChannel(opts);
       await channel.connect();
 
-      currentApp().client.chat.postMessage.mockRejectedValueOnce(
-        new Error('Network error'),
-      );
+      currentApp().client.chat.postMessage.mockRejectedValueOnce(new Error('Network error'));
 
       // Should not throw
-      await expect(
-        channel.sendMessage('slack:C0123456789', 'Will fail'),
-      ).resolves.toBeUndefined();
+      await expect(channel.sendMessage('slack:C0123456789', 'Will fail')).resolves.toBeUndefined();
     });
 
     it('splits long messages at 4000 character boundary', async () => {
@@ -757,9 +745,7 @@ describe('SlackChannel', () => {
       const opts = createTestOpts();
       const channel = new SlackChannel(opts);
 
-      currentApp().client.conversations.list.mockRejectedValue(
-        new Error('API error'),
-      );
+      currentApp().client.conversations.list.mockRejectedValue(new Error('API error'));
 
       // Should not throw
       await expect(channel.connect()).resolves.toBeUndefined();
@@ -774,18 +760,14 @@ describe('SlackChannel', () => {
       const channel = new SlackChannel(opts);
 
       // Should not throw — Slack has no bot typing indicator API
-      await expect(
-        channel.setTyping('slack:C0123456789', true),
-      ).resolves.toBeUndefined();
+      await expect(channel.setTyping('slack:C0123456789', true)).resolves.toBeUndefined();
     });
 
     it('accepts false without error', async () => {
       const opts = createTestOpts();
       const channel = new SlackChannel(opts);
 
-      await expect(
-        channel.setTyping('slack:C0123456789', false),
-      ).resolves.toBeUndefined();
+      await expect(channel.setTyping('slack:C0123456789', false)).resolves.toBeUndefined();
     });
   });
 

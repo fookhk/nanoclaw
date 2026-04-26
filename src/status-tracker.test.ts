@@ -18,19 +18,13 @@ vi.mock('./logger.js', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-import {
-  StatusTracker,
-  StatusState,
-  StatusTrackerDeps,
-} from './status-tracker.js';
+import { StatusTracker, StatusState, StatusTrackerDeps } from './status-tracker.js';
 
 function makeDeps() {
   return {
     sendReaction: vi.fn<StatusTrackerDeps['sendReaction']>(async () => {}),
     sendMessage: vi.fn<StatusTrackerDeps['sendMessage']>(async () => {}),
-    isMainGroup: vi.fn<StatusTrackerDeps['isMainGroup']>(
-      (jid) => jid === 'main@s.whatsapp.net',
-    ),
+    isMainGroup: vi.fn<StatusTrackerDeps['isMainGroup']>((jid) => jid === 'main@s.whatsapp.net'),
     isContainerAlive: vi.fn<StatusTrackerDeps['isContainerAlive']>(() => true),
   };
 }
@@ -60,12 +54,7 @@ describe('StatusTracker', () => {
 
       expect(deps.sendReaction).toHaveBeenCalledTimes(4);
       const emojis = deps.sendReaction.mock.calls.map((c) => c[2]);
-      expect(emojis).toEqual([
-        '\u{1F440}',
-        '\u{1F4AD}',
-        '\u{1F504}',
-        '\u{2705}',
-      ]);
+      expect(emojis).toEqual(['\u{1F440}', '\u{1F4AD}', '\u{1F504}', '\u{2705}']);
     });
 
     it('rejects backward transitions (WORKING -> THINKING is no-op)', async () => {
@@ -149,9 +138,7 @@ describe('StatusTracker', () => {
       tracker.markAllDone('main@s.whatsapp.net');
       await tracker.flush();
 
-      const doneCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '\u{2705}',
-      );
+      const doneCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '\u{2705}');
       expect(doneCalls).toHaveLength(2);
     });
 
@@ -161,14 +148,9 @@ describe('StatusTracker', () => {
       tracker.markAllFailed('main@s.whatsapp.net', 'Task crashed');
       await tracker.flush();
 
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '\u{274C}',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '\u{274C}');
       expect(failCalls).toHaveLength(2);
-      expect(deps.sendMessage).toHaveBeenCalledWith(
-        'main@s.whatsapp.net',
-        '[system] Task crashed',
-      );
+      expect(deps.sendMessage).toHaveBeenCalledWith('main@s.whatsapp.net', '[system] Task crashed');
     });
   });
 
@@ -186,12 +168,7 @@ describe('StatusTracker', () => {
       tracker.markDone('msg1');
 
       await tracker.flush();
-      expect(order).toEqual([
-        '\u{1F440}',
-        '\u{1F4AD}',
-        '\u{1F504}',
-        '\u{2705}',
-      ]);
+      expect(order).toEqual(['\u{1F440}', '\u{1F4AD}', '\u{1F504}', '\u{2705}']);
     });
   });
 
@@ -225,16 +202,12 @@ describe('StatusTracker', () => {
         },
       ]);
       (fs.default.existsSync as ReturnType<typeof vi.fn>).mockReturnValue(true);
-      (fs.default.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(
-        persisted,
-      );
+      (fs.default.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(persisted);
 
       await tracker.recover();
 
       // Should send ❌ reaction for the 2 non-terminal entries only
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCalls).toHaveLength(2);
 
       // Should send one error message per chatJid
@@ -247,9 +220,7 @@ describe('StatusTracker', () => {
 
     it('handles missing persistence file gracefully', async () => {
       const fs = await import('fs');
-      (fs.default.existsSync as ReturnType<typeof vi.fn>).mockReturnValue(
-        false,
-      );
+      (fs.default.existsSync as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
       await tracker.recover(); // should not throw
       expect(deps.sendReaction).not.toHaveBeenCalled();
@@ -268,9 +239,7 @@ describe('StatusTracker', () => {
         },
       ]);
       (fs.default.existsSync as ReturnType<typeof vi.fn>).mockReturnValue(true);
-      (fs.default.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(
-        persisted,
-      );
+      (fs.default.readFileSync as ReturnType<typeof vi.fn>).mockReturnValue(persisted);
 
       await tracker.recover(false);
 
@@ -291,14 +260,9 @@ describe('StatusTracker', () => {
       tracker.heartbeatCheck();
       await tracker.flush();
 
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCalls).toHaveLength(1);
-      expect(deps.sendMessage).toHaveBeenCalledWith(
-        'main@s.whatsapp.net',
-        '[system] Task crashed — retrying.',
-      );
+      expect(deps.sendMessage).toHaveBeenCalledWith('main@s.whatsapp.net', '[system] Task crashed — retrying.');
     });
 
     it('does nothing when container is alive', async () => {
@@ -340,14 +304,9 @@ describe('StatusTracker', () => {
       tracker.heartbeatCheck();
       await tracker.flush();
 
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCalls).toHaveLength(1);
-      expect(deps.sendMessage).toHaveBeenCalledWith(
-        'main@s.whatsapp.net',
-        '[system] Task crashed — retrying.',
-      );
+      expect(deps.sendMessage).toHaveBeenCalledWith('main@s.whatsapp.net', '[system] Task crashed — retrying.');
     });
 
     it('does NOT fail RECEIVED messages after grace period when container is alive', async () => {
@@ -377,14 +336,9 @@ describe('StatusTracker', () => {
       tracker.heartbeatCheck();
       await tracker.flush();
 
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCalls).toHaveLength(1);
-      expect(deps.sendMessage).toHaveBeenCalledWith(
-        'main@s.whatsapp.net',
-        '[system] Task timed out — retrying.',
-      );
+      expect(deps.sendMessage).toHaveBeenCalledWith('main@s.whatsapp.net', '[system] Task timed out — retrying.');
     });
 
     it('does not timeout messages queued long in RECEIVED before reaching THINKING', async () => {
@@ -403,9 +357,7 @@ describe('StatusTracker', () => {
       tracker.heartbeatCheck();
       await tracker.flush();
 
-      const failCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCalls).toHaveLength(0);
 
       // Advance past CONTAINER_TIMEOUT from THINKING — NOW it should timeout
@@ -414,9 +366,7 @@ describe('StatusTracker', () => {
       tracker.heartbeatCheck();
       await tracker.flush();
 
-      const failCallsAfter = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '❌',
-      );
+      const failCallsAfter = deps.sendReaction.mock.calls.filter((c) => c[2] === '❌');
       expect(failCallsAfter).toHaveLength(1);
     });
   });
@@ -497,9 +447,7 @@ describe('StatusTracker', () => {
 
       await tracker.flush();
 
-      const thinkingCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '💭',
-      );
+      const thinkingCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '💭');
       expect(thinkingCalls).toHaveLength(3);
     });
 
@@ -514,9 +462,7 @@ describe('StatusTracker', () => {
 
       await tracker.flush();
 
-      const workingCalls = deps.sendReaction.mock.calls.filter(
-        (c) => c[2] === '🔄',
-      );
+      const workingCalls = deps.sendReaction.mock.calls.filter((c) => c[2] === '🔄');
       expect(workingCalls).toHaveLength(2);
     });
   });

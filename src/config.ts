@@ -24,8 +24,7 @@ export const ASSISTANT_NAME = process.env.ASSISTANT_NAME || envConfig.ASSISTANT_
 export const ASSISTANT_HAS_OWN_NUMBER =
   (process.env.ASSISTANT_HAS_OWN_NUMBER || envConfig.ASSISTANT_HAS_OWN_NUMBER) === 'true';
 export const OLLAMA_ADMIN_TOOLS = (process.env.OLLAMA_ADMIN_TOOLS || envConfig.OLLAMA_ADMIN_TOOLS) === 'true';
-export const OLLAMA_ROUTER_ENABLED =
-  (process.env.OLLAMA_ROUTER_ENABLED || envConfig.OLLAMA_ROUTER_ENABLED) === 'true';
+export const OLLAMA_ROUTER_ENABLED = (process.env.OLLAMA_ROUTER_ENABLED || envConfig.OLLAMA_ROUTER_ENABLED) === 'true';
 export const OLLAMA_URL = process.env.OLLAMA_URL || envConfig.OLLAMA_URL || 'http://localhost:11434';
 export const OLLAMA_ROUTER_MODEL = process.env.OLLAMA_ROUTER_MODEL || envConfig.OLLAMA_ROUTER_MODEL || 'llama3.2';
 
@@ -84,7 +83,5 @@ function resolveConfigTimezone(): string {
 }
 export const TIMEZONE = resolveConfigTimezone();
 
-export const LAZYLIBRARIAN_URL =
-  process.env.LAZYLIBRARIAN_URL || envConfig.LAZYLIBRARIAN_URL || '';
-export const LAZYLIBRARIAN_API_KEY =
-  process.env.LAZYLIBRARIAN_API_KEY || envConfig.LAZYLIBRARIAN_API_KEY || '';
+export const LAZYLIBRARIAN_URL = process.env.LAZYLIBRARIAN_URL || envConfig.LAZYLIBRARIAN_URL || '';
+export const LAZYLIBRARIAN_API_KEY = process.env.LAZYLIBRARIAN_API_KEY || envConfig.LAZYLIBRARIAN_API_KEY || '';

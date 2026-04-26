@@ -1,9 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  extractSessionCommand,
-  handleSessionCommand,
-  isSessionCommandAllowed,
-} from './session-commands.js';
+import { extractSessionCommand, handleSessionCommand, isSessionCommandAllowed } from './session-commands.js';
 import type { NewMessage } from './types.js';
 import type { SessionCommandDeps } from './session-commands.js';
 
@@ -27,9 +23,7 @@ describe('extractSessionCommand', () => {
   });
 
   it('rejects regular messages', () => {
-    expect(
-      extractSessionCommand('please compact the conversation', trigger),
-    ).toBeNull();
+    expect(extractSessionCommand('please compact the conversation', trigger)).toBeNull();
   });
 
   it('handles whitespace', () => {
@@ -59,10 +53,7 @@ describe('isSessionCommandAllowed', () => {
   });
 });
 
-function makeMsg(
-  content: string,
-  overrides: Partial<NewMessage> = {},
-): NewMessage {
+function makeMsg(content: string, overrides: Partial<NewMessage> = {}): NewMessage {
   return {
     id: 'msg-1',
     chat_jid: 'group@test',
@@ -74,9 +65,7 @@ function makeMsg(
   };
 }
 
-function makeDeps(
-  overrides: Partial<SessionCommandDeps> = {},
-): SessionCommandDeps {
+function makeDeps(overrides: Partial<SessionCommandDeps> = {}): SessionCommandDeps {
   return {
     sendMessage: vi.fn().mockResolvedValue(undefined),
     setTyping: vi.fn().mockResolvedValue(undefined),
@@ -116,10 +105,7 @@ describe('handleSessionCommand', () => {
       deps,
     });
     expect(result).toEqual({ handled: true, success: true });
-    expect(deps.runAgent).toHaveBeenCalledWith(
-      '/compact',
-      expect.any(Function),
-    );
+    expect(deps.runAgent).toHaveBeenCalledWith('/compact', expect.any(Function));
     expect(deps.advanceCursor).toHaveBeenCalledWith('100');
   });
 
@@ -134,9 +120,7 @@ describe('handleSessionCommand', () => {
       deps,
     });
     expect(result).toEqual({ handled: true, success: true });
-    expect(deps.sendMessage).toHaveBeenCalledWith(
-      'Session commands require admin access.',
-    );
+    expect(deps.sendMessage).toHaveBeenCalledWith('Session commands require admin access.');
     expect(deps.runAgent).not.toHaveBeenCalled();
     expect(deps.advanceCursor).toHaveBeenCalledWith('100');
   });
@@ -160,10 +144,7 @@ describe('handleSessionCommand', () => {
 
   it('processes pre-compact messages before /compact', async () => {
     const deps = makeDeps();
-    const msgs = [
-      makeMsg('summarize this', { timestamp: '99' }),
-      makeMsg('/compact', { timestamp: '100' }),
-    ];
+    const msgs = [makeMsg('summarize this', { timestamp: '99' }), makeMsg('/compact', { timestamp: '100' })];
     const result = await handleSessionCommand({
       missedMessages: msgs,
       isMainGroup: true,
@@ -176,14 +157,8 @@ describe('handleSessionCommand', () => {
     expect(deps.formatMessages).toHaveBeenCalledWith([msgs[0]], 'UTC');
     // Two runAgent calls: pre-compact + /compact
     expect(deps.runAgent).toHaveBeenCalledTimes(2);
-    expect(deps.runAgent).toHaveBeenCalledWith(
-      '<formatted>',
-      expect.any(Function),
-    );
-    expect(deps.runAgent).toHaveBeenCalledWith(
-      '/compact',
-      expect.any(Function),
-    );
+    expect(deps.runAgent).toHaveBeenCalledWith('<formatted>', expect.any(Function));
+    expect(deps.runAgent).toHaveBeenCalledWith('/compact', expect.any(Function));
   });
 
   it('allows is_from_me sender in non-main group', async () => {
@@ -197,10 +172,7 @@ describe('handleSessionCommand', () => {
       deps,
     });
     expect(result).toEqual({ handled: true, success: true });
-    expect(deps.runAgent).toHaveBeenCalledWith(
-      '/compact',
-      expect.any(Function),
-    );
+    expect(deps.runAgent).toHaveBeenCalledWith('/compact', expect.any(Function));
   });
 
   it('reports failure when command-stage runAgent returns error without streamed status', async () => {
@@ -220,17 +192,12 @@ describe('handleSessionCommand', () => {
       deps,
     });
     expect(result).toEqual({ handled: true, success: true });
-    expect(deps.sendMessage).toHaveBeenCalledWith(
-      expect.stringContaining('failed'),
-    );
+    expect(deps.sendMessage).toHaveBeenCalledWith(expect.stringContaining('failed'));
   });
 
   it('returns success:false on pre-compact failure with no output', async () => {
     const deps = makeDeps({ runAgent: vi.fn().mockResolvedValue('error') });
-    const msgs = [
-      makeMsg('summarize this', { timestamp: '99' }),
-      makeMsg('/compact', { timestamp: '100' }),
-    ];
+    const msgs = [makeMsg('summarize this', { timestamp: '99' }), makeMsg('/compact', { timestamp: '100' })];
     const result = await handleSessionCommand({
       missedMessages: msgs,
       isMainGroup: true,
@@ -240,8 +207,6 @@ describe('handleSessionCommand', () => {
       deps,
     });
     expect(result).toEqual({ handled: true, success: false });
-    expect(deps.sendMessage).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to process'),
-    );
+    expect(deps.sendMessage).toHaveBeenCalledWith(expect.stringContaining('Failed to process'));
   });
 });

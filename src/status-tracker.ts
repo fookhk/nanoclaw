@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { DATA_DIR, CONTAINER_TIMEOUT } from './config.js';
-import { logger } from './logger.js';
+import { log } from './log.js';
 
 // DONE and FAILED share value 3: both are terminal states with monotonic
 // forward-only transitions (state >= current). The emoji differs but the
@@ -49,11 +49,7 @@ interface PersistedEntry {
 }
 
 export interface StatusTrackerDeps {
-  sendReaction: (
-    chatJid: string,
-    messageKey: MessageKey,
-    emoji: string,
-  ) => Promise<void>;
+  sendReaction: (chatJid: string, messageKey: MessageKey, emoji: string) => Promise<void>;
   sendMessage: (chatJid: string, text: string) => Promise<void>;
   isMainGroup: (chatJid: string) => boolean;
   isContainerAlive: (chatJid: string) => boolean;
@@ -125,9 +121,7 @@ export class StatusTracker {
     if (anyFailed) {
       this.deps
         .sendMessage(chatJid, `[system] ${errorMessage}`)
-        .catch((err) =>
-          logger.error({ chatJid, err }, 'Failed to send status error message'),
-        );
+        .catch((err) => log.error('Failed to send status error message', { chatJid, err }));
     }
   }
 
@@ -159,7 +153,7 @@ export class StatusTracker {
         entries = JSON.parse(raw);
       }
     } catch (err) {
-      logger.warn({ err }, 'Failed to read status tracker persistence file');
+      log.warn('Failed to read status tracker persistence file', { err });
       return;
     }
 
@@ -179,31 +173,22 @@ export class StatusTracker {
       };
       this.tracked.set(entry.messageId, msg);
       this.transitionTerminal(entry.messageId, 'failed', FAILED_EMOJI);
-      orphanedByChat.set(
-        entry.chatJid,
-        (orphanedByChat.get(entry.chatJid) || 0) + 1,
-      );
+      orphanedByChat.set(entry.chatJid, (orphanedByChat.get(entry.chatJid) || 0) + 1);
     }
 
     if (sendErrorMessage) {
       for (const [chatJid] of orphanedByChat) {
         this.deps
-          .sendMessage(
-            chatJid,
-            `[system] Restarted \u{2014} reprocessing your message.`,
-          )
-          .catch((err) =>
-            logger.error({ chatJid, err }, 'Failed to send recovery message'),
-          );
+          .sendMessage(chatJid, `[system] Restarted \u{2014} reprocessing your message.`)
+          .catch((err) => log.error('Failed to send recovery message', { chatJid, err }));
       }
     }
 
     await this.flush();
     this.clearPersistence();
-    logger.info(
-      { recoveredCount: entries.filter((e) => e.terminal === null).length },
-      'Status tracker recovery complete',
-    );
+    log.info('Status tracker recovery complete', {
+      recoveredCount: entries.filter((e) => e.terminal === null).length,
+    });
   }
 
   /**
@@ -218,14 +203,12 @@ export class StatusTracker {
       // For RECEIVED messages, only fail if container is dead AND grace period elapsed.
       // This closes the gap where a container dies before advancing to THINKING.
       if (msg.state < StatusState.THINKING) {
-        if (
-          !this.deps.isContainerAlive(msg.chatJid) &&
-          now - msg.trackedAt > RECEIVED_GRACE_MS
-        ) {
-          logger.warn(
-            { messageId: id, chatJid: msg.chatJid, age: now - msg.trackedAt },
-            'Heartbeat: RECEIVED message stuck with dead container',
-          );
+        if (!this.deps.isContainerAlive(msg.chatJid) && now - msg.trackedAt > RECEIVED_GRACE_MS) {
+          log.warn('Heartbeat: RECEIVED message stuck with dead container', {
+            messageId: id,
+            chatJid: msg.chatJid,
+            age: now - msg.trackedAt,
+          });
           this.markAllFailed(msg.chatJid, 'Task crashed \u{2014} retrying.');
           return; // Safe for main-chat-only scope. If expanded to multiple chats, loop instead of return.
         }
@@ -233,30 +216,24 @@ export class StatusTracker {
       }
 
       if (!this.deps.isContainerAlive(msg.chatJid)) {
-        logger.warn(
-          { messageId: id, chatJid: msg.chatJid },
-          'Heartbeat: container dead, marking failed',
-        );
+        log.warn('Heartbeat: container dead, marking failed', { messageId: id, chatJid: msg.chatJid });
         this.markAllFailed(msg.chatJid, 'Task crashed \u{2014} retrying.');
         return; // Safe for main-chat-only scope. If expanded to multiple chats, loop instead of return.
       }
 
       if (now - msg.trackedAt > CONTAINER_TIMEOUT) {
-        logger.warn(
-          { messageId: id, chatJid: msg.chatJid, age: now - msg.trackedAt },
-          'Heartbeat: message stuck beyond timeout',
-        );
+        log.warn('Heartbeat: message stuck beyond timeout', {
+          messageId: id,
+          chatJid: msg.chatJid,
+          age: now - msg.trackedAt,
+        });
         this.markAllFailed(msg.chatJid, 'Task timed out \u{2014} retrying.');
         return; // See above re: single-chat scope.
       }
     }
   }
 
-  private transition(
-    messageId: string,
-    newState: number,
-    emoji: string,
-  ): boolean {
+  private transition(messageId: string, newState: number, emoji: string): boolean {
     const msg = this.tracked.get(messageId);
     if (!msg) return false;
     if (msg.terminal !== null) return false;
@@ -272,11 +249,7 @@ export class StatusTracker {
     return true;
   }
 
-  private transitionTerminal(
-    messageId: string,
-    terminal: 'done' | 'failed',
-    emoji: string,
-  ): boolean {
+  private transitionTerminal(messageId: string, terminal: 'done' | 'failed', emoji: string): boolean {
     const msg = this.tracked.get(messageId);
     if (!msg) return false;
     if (msg.terminal !== null) return false;
@@ -302,22 +275,23 @@ export class StatusTracker {
           return;
         } catch (err) {
           if (attempt === REACTION_MAX_RETRIES) {
-            logger.error(
-              { messageId: msg.messageId, emoji, err, attempts: attempt },
-              'Failed to send status reaction after retries',
-            );
+            log.error('Failed to send status reaction after retries', {
+              messageId: msg.messageId,
+              emoji,
+              err,
+              attempts: attempt,
+            });
           } else if (this._shuttingDown) {
-            logger.warn(
-              { messageId: msg.messageId, emoji, attempt, err },
-              'Reaction send failed, skipping retry (shutting down)',
-            );
+            log.warn('Reaction send failed, skipping retry (shutting down)', {
+              messageId: msg.messageId,
+              emoji,
+              attempt,
+              err,
+            });
             return;
           } else {
             const delay = REACTION_BASE_DELAY_MS * Math.pow(2, attempt - 1);
-            logger.warn(
-              { messageId: msg.messageId, emoji, attempt, delay, err },
-              'Reaction send failed, retrying',
-            );
+            log.warn('Reaction send failed, retrying', { messageId: msg.messageId, emoji, attempt, delay, err });
             await new Promise((r) => setTimeout(r, delay));
           }
         }
@@ -349,7 +323,7 @@ export class StatusTracker {
       fs.mkdirSync(path.dirname(this.persistPath), { recursive: true });
       fs.writeFileSync(this.persistPath, JSON.stringify(entries));
     } catch (err) {
-      logger.warn({ err }, 'Failed to persist status tracker state');
+      log.warn('Failed to persist status tracker state', { err });
     }
   }
 

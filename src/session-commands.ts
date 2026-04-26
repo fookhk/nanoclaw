@@ -1,14 +1,12 @@
-import type { NewMessage } from './types.js';
-import { logger } from './logger.js';
+import { log } from './log.js';
+
+type NewMessage = Record<string, unknown>;
 
 /**
  * Extract a session slash command from a message, stripping the trigger prefix if present.
  * Returns the slash command (e.g., '/compact') or null if not a session command.
  */
-export function extractSessionCommand(
-  content: string,
-  triggerPattern: RegExp,
-): string | null {
+export function extractSessionCommand(content: string, triggerPattern: RegExp): string | null {
   let text = content.trim();
   text = text.replace(triggerPattern, '').trim();
   if (text === '/compact') return '/compact';
@@ -19,10 +17,7 @@ export function extractSessionCommand(
  * Check if a session command sender is authorized.
  * Allowed: main group (any sender), or trusted/admin sender (is_from_me) in any group.
  */
-export function isSessionCommandAllowed(
-  isMainGroup: boolean,
-  isFromMe: boolean,
-): boolean {
+export function isSessionCommandAllowed(isMainGroup: boolean, isFromMe: boolean): boolean {
   return isMainGroup || isFromMe;
 }
 
@@ -36,10 +31,7 @@ export interface AgentResult {
 export interface SessionCommandDeps {
   sendMessage: (text: string) => Promise<void>;
   setTyping: (typing: boolean) => Promise<void>;
-  runAgent: (
-    prompt: string,
-    onOutput: (result: AgentResult) => Promise<void>,
-  ) => Promise<'success' | 'error'>;
+  runAgent: (prompt: string, onOutput: (result: AgentResult) => Promise<void>) => Promise<'success' | 'error'>;
   closeStdin: () => void;
   advanceCursor: (timestamp: string) => void;
   formatMessages: (msgs: NewMessage[], timezone: string) => string;
@@ -67,21 +59,10 @@ export async function handleSessionCommand(opts: {
   timezone: string;
   deps: SessionCommandDeps;
 }): Promise<{ handled: false } | { handled: true; success: boolean }> {
-  const {
-    missedMessages,
-    isMainGroup,
-    groupName,
-    triggerPattern,
-    timezone,
-    deps,
-  } = opts;
+  const { missedMessages, isMainGroup, groupName, triggerPattern, timezone, deps } = opts;
 
-  const cmdMsg = missedMessages.find(
-    (m) => extractSessionCommand(m.content, triggerPattern) !== null,
-  );
-  const command = cmdMsg
-    ? extractSessionCommand(cmdMsg.content, triggerPattern)
-    : null;
+  const cmdMsg = missedMessages.find((m) => extractSessionCommand(m.content as string, triggerPattern) !== null);
+  const command = cmdMsg ? extractSessionCommand(cmdMsg.content as string, triggerPattern) : null;
 
   if (!command || !cmdMsg) return { handled: false };
 
@@ -93,12 +74,12 @@ export async function handleSessionCommand(opts: {
     if (deps.canSenderInteract(cmdMsg)) {
       await deps.sendMessage('Session commands require admin access.');
     }
-    deps.advanceCursor(cmdMsg.timestamp);
+    deps.advanceCursor(cmdMsg.timestamp as string);
     return { handled: true, success: true };
   }
 
   // AUTHORIZED: process pre-compact messages first, then run the command
-  logger.info({ group: groupName, command }, 'Session command');
+  log.info('Session command', { group: groupName, command });
 
   const cmdIndex = missedMessages.indexOf(cmdMsg);
   const preCompactMsgs = missedMessages.slice(0, cmdIndex);
@@ -124,17 +105,12 @@ export async function handleSessionCommand(opts: {
     });
 
     if (preResult === 'error' || hadPreError) {
-      logger.warn(
-        { group: groupName },
-        'Pre-compact processing failed, aborting session command',
-      );
-      await deps.sendMessage(
-        `Failed to process messages before ${command}. Try again.`,
-      );
+      log.warn('Pre-compact processing failed, aborting session command', { group: groupName });
+      await deps.sendMessage(`Failed to process messages before ${command}. Try again.`);
       if (preOutputSent) {
         // Output was already sent — don't retry or it will duplicate.
         // Advance cursor past pre-compact messages, leave command pending.
-        deps.advanceCursor(preCompactMsgs[preCompactMsgs.length - 1].timestamp);
+        deps.advanceCursor(preCompactMsgs[preCompactMsgs.length - 1].timestamp as string);
         return { handled: true, success: true };
       }
       return { handled: true, success: false };
@@ -152,7 +128,7 @@ export async function handleSessionCommand(opts: {
   });
 
   // Advance cursor to the command — messages AFTER it remain pending for next poll.
-  deps.advanceCursor(cmdMsg.timestamp);
+  deps.advanceCursor(cmdMsg.timestamp as string);
   await deps.setTyping(false);
 
   if (cmdOutput === 'error' || hadCmdError) {

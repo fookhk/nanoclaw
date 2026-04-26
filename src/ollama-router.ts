@@ -8,14 +8,11 @@
  */
 
 import { OLLAMA_ROUTER_MODEL, OLLAMA_URL } from './config.js';
-import { logger } from './logger.js';
+import { log } from './log.js';
 
 const TIMEOUT_MS = 10_000;
 
-async function ollamaGenerate(
-  prompt: string,
-  system?: string,
-): Promise<string | null> {
+async function ollamaGenerate(prompt: string, system?: string): Promise<string | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -35,14 +32,14 @@ async function ollamaGenerate(
     });
 
     if (!res.ok) {
-      logger.debug({ status: res.status }, 'Ollama router: non-OK response');
+      log.debug('Ollama router: non-OK response', { status: res.status });
       return null;
     }
 
     const data = (await res.json()) as { response?: string };
     return data.response ?? null;
   } catch (err) {
-    logger.debug({ err }, 'Ollama router: request failed');
+    log.debug('Ollama router: request failed', { err });
     return null;
   } finally {
     clearTimeout(timer);
@@ -56,9 +53,7 @@ async function ollamaGenerate(
  * @returns The Ollama response string if the message is BASIC, or null if it
  *          is COMPLEX or Ollama is unavailable (caller should use Claude container).
  */
-export async function routeWithOllama(
-  userMessage: string,
-): Promise<string | null> {
+export async function routeWithOllama(userMessage: string): Promise<string | null> {
   // Step 1: classify
   const classificationPrompt =
     `Classify this message as "BASIC" or "COMPLEX".\n` +
@@ -74,14 +69,11 @@ export async function routeWithOllama(
 
   const isBasic = classification.trim().toUpperCase().startsWith('BASIC');
   if (!isBasic) {
-    logger.debug(
-      { classification: classification.trim() },
-      'Ollama router: COMPLEX → container',
-    );
+    log.debug('Ollama router: COMPLEX → container', { classification: classification.trim() });
     return null;
   }
 
-  logger.debug('Ollama router: BASIC → local response');
+  log.debug('Ollama router: BASIC → local response');
 
   // Step 2: answer
   const response = await ollamaGenerate(userMessage);

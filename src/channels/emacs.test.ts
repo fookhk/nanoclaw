@@ -74,20 +74,17 @@ async function req(
       'Content-Type': 'application/json',
       ...extraHeaders,
     };
-    const request = http.request(
-      { host: '127.0.0.1', port, method, path, headers },
-      (res) => {
-        let raw = '';
-        res.on('data', (chunk: Buffer) => (raw += chunk));
-        res.on('end', () => {
-          try {
-            resolve({ status: res.statusCode!, data: JSON.parse(raw) });
-          } catch {
-            resolve({ status: res.statusCode!, data: raw });
-          }
-        });
-      },
-    );
+    const request = http.request({ host: '127.0.0.1', port, method, path, headers }, (res) => {
+      let raw = '';
+      res.on('data', (chunk: Buffer) => (raw += chunk));
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode!, data: JSON.parse(raw) });
+        } catch {
+          resolve({ status: res.statusCode!, data: raw });
+        }
+      });
+    });
     request.on('error', reject);
     if (body) request.write(body);
     request.end();
@@ -96,8 +93,7 @@ async function req(
 
 /** Read the actual bound port after connect() (server listens on port 0). */
 function boundPort(channel: EmacsBridgeChannel): number {
-  return (((channel as any).server as http.Server).address() as AddressInfo)
-    .port;
+  return (((channel as any).server as http.Server).address() as AddressInfo).port;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,12 +203,7 @@ describe('EmacsBridgeChannel', () => {
     });
 
     it('returns 200 with messageId and timestamp for valid text', async () => {
-      const { status, data } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: 'hello' }),
-      );
+      const { status, data } = await req(port, 'POST', '/api/message', JSON.stringify({ text: 'hello' }));
       expect(status).toBe(200);
       expect(data).toHaveProperty('messageId');
       expect(data).toHaveProperty('timestamp');
@@ -235,33 +226,19 @@ describe('EmacsBridgeChannel', () => {
 
     it('calls opts.onChatMetadata before opts.onMessage', async () => {
       const order: string[] = [];
-      (opts.onChatMetadata as ReturnType<typeof vi.fn>).mockImplementation(() =>
-        order.push('meta'),
-      );
-      (opts.onMessage as ReturnType<typeof vi.fn>).mockImplementation(() =>
-        order.push('msg'),
-      );
+      (opts.onChatMetadata as ReturnType<typeof vi.fn>).mockImplementation(() => order.push('meta'));
+      (opts.onMessage as ReturnType<typeof vi.fn>).mockImplementation(() => order.push('msg'));
       await req(port, 'POST', '/api/message', JSON.stringify({ text: 'hi' }));
       expect(order).toEqual(['meta', 'msg']);
     });
 
     it('returns 400 for empty text', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: '' }),
-      );
+      const { status } = await req(port, 'POST', '/api/message', JSON.stringify({ text: '' }));
       expect(status).toBe(400);
     });
 
     it('returns 400 for whitespace-only text', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: '   ' }),
-      );
+      const { status } = await req(port, 'POST', '/api/message', JSON.stringify({ text: '   ' }));
       expect(status).toBe(400);
     });
 
@@ -271,12 +248,7 @@ describe('EmacsBridgeChannel', () => {
     });
 
     it('returns 404 for unknown paths', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/unknown',
-        JSON.stringify({ text: 'hi' }),
-      );
+      const { status } = await req(port, 'POST', '/api/unknown', JSON.stringify({ text: 'hi' }));
       expect(status).toBe(404);
     });
   });
@@ -337,11 +309,7 @@ describe('EmacsBridgeChannel', () => {
 
     it('pushes exact text to the buffer', async () => {
       await channel.sendMessage('emacs:default', 'response text');
-      const { data } = await req(
-        boundPort(channel),
-        'GET',
-        '/api/messages?since=0',
-      );
+      const { data } = await req(boundPort(channel), 'GET', '/api/messages?since=0');
       expect(data.messages[0].text).toBe('response text');
     });
 
@@ -349,11 +317,7 @@ describe('EmacsBridgeChannel', () => {
       const before = Date.now();
       await channel.sendMessage('emacs:default', 'ts-check');
       const after = Date.now();
-      const { data } = await req(
-        boundPort(channel),
-        'GET',
-        '/api/messages?since=0',
-      );
+      const { data } = await req(boundPort(channel), 'GET', '/api/messages?since=0');
       expect(data.messages[0].timestamp).toBeGreaterThanOrEqual(before);
       expect(data.messages[0].timestamp).toBeLessThanOrEqual(after);
     });
@@ -375,34 +339,21 @@ describe('EmacsBridgeChannel', () => {
     });
 
     it('rejects POST without Authorization header (401)', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: 'hi' }),
-      );
+      const { status } = await req(port, 'POST', '/api/message', JSON.stringify({ text: 'hi' }));
       expect(status).toBe(401);
     });
 
     it('rejects POST with wrong token (401)', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: 'hi' }),
-        { Authorization: 'Bearer wrong' },
-      );
+      const { status } = await req(port, 'POST', '/api/message', JSON.stringify({ text: 'hi' }), {
+        Authorization: 'Bearer wrong',
+      });
       expect(status).toBe(401);
     });
 
     it('accepts POST with correct Bearer token (200)', async () => {
-      const { status } = await req(
-        port,
-        'POST',
-        '/api/message',
-        JSON.stringify({ text: 'hi' }),
-        { Authorization: 'Bearer secret' },
-      );
+      const { status } = await req(port, 'POST', '/api/message', JSON.stringify({ text: 'hi' }), {
+        Authorization: 'Bearer secret',
+      });
       expect(status).toBe(200);
     });
 
@@ -412,13 +363,7 @@ describe('EmacsBridgeChannel', () => {
     });
 
     it('accepts GET with correct Bearer token (200)', async () => {
-      const { status } = await req(
-        port,
-        'GET',
-        '/api/messages?since=0',
-        undefined,
-        { Authorization: 'Bearer secret' },
-      );
+      const { status } = await req(port, 'GET', '/api/messages?since=0', undefined, { Authorization: 'Bearer secret' });
       expect(status).toBe(200);
     });
 
@@ -427,11 +372,7 @@ describe('EmacsBridgeChannel', () => {
       await noAuthChannel.connect();
       const noAuthPort = boundPort(noAuthChannel);
       try {
-        const { status } = await req(
-          noAuthPort,
-          'GET',
-          '/api/messages?since=0',
-        );
+        const { status } = await req(noAuthPort, 'GET', '/api/messages?since=0');
         expect(status).toBe(200);
       } finally {
         await noAuthChannel.disconnect();
@@ -455,21 +396,12 @@ function emacsAvailable(): boolean {
 function mdToOrg(input: string): string {
   const elFile = path.resolve('emacs/nanoclaw.el');
   // Escape input as an Emacs string literal — no shell involved so no shell quoting needed
-  const escaped = input
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n');
+  const escaped = input.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
   // execFileSync passes args as an array (no shell), bypassing both shell quoting
   // and the vi.mock('fs') stub that would block writeFileSync
   return execFileSync(
     'emacs',
-    [
-      '--batch',
-      '--load',
-      elFile,
-      '--eval',
-      `(princ (nanoclaw--md-to-org-regex "${escaped}"))`,
-    ],
+    ['--batch', '--load', elFile, '--eval', `(princ (nanoclaw--md-to-org-regex "${escaped}"))`],
     { encoding: 'utf8' },
   );
 }
@@ -500,15 +432,11 @@ describe.skipIf(!emacsAvailable())('nanoclaw--md-to-org-regex', () => {
   });
 
   it('converts fenced code block with language', () => {
-    expect(mdToOrg('```typescript\nconst x = 1;\n```')).toBe(
-      '#+begin_src typescript\nconst x = 1;\n#+end_src',
-    );
+    expect(mdToOrg('```typescript\nconst x = 1;\n```')).toBe('#+begin_src typescript\nconst x = 1;\n#+end_src');
   });
 
   it('converts fenced code block without language', () => {
-    expect(mdToOrg('```\nhello\n```')).toBe(
-      '#+begin_src text\nhello\n#+end_src',
-    );
+    expect(mdToOrg('```\nhello\n```')).toBe('#+begin_src text\nhello\n#+end_src');
   });
 
   it('converts ## heading → ** heading', () => {
@@ -524,8 +452,6 @@ describe.skipIf(!emacsAvailable())('nanoclaw--md-to-org-regex', () => {
   });
 
   it('converts links [text](url) → [[url][text]]', () => {
-    expect(mdToOrg('[NanoClaw](https://example.com)')).toBe(
-      '[[https://example.com][NanoClaw]]',
-    );
+    expect(mdToOrg('[NanoClaw](https://example.com)')).toBe('[[https://example.com][NanoClaw]]');
   });
 });
