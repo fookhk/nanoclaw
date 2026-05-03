@@ -31,6 +31,7 @@ import { buildSystemPromptAddendum } from './destinations.js';
 // Provider skills append imports to providers/index.ts.
 import './providers/index.js';
 import { createProvider, type ProviderName } from './providers/factory.js';
+import { type McpServerConfig } from './providers/types.js';
 import { runPollLoop } from './poll-loop.js';
 
 function log(msg: string): void {
@@ -72,8 +73,10 @@ async function main(): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const mcpServerPath = path.join(__dirname, 'mcp-tools', 'index.ts');
 
+  const QMD_URL = process.env.QMD_URL || 'http://host.docker.internal:8182/mcp';
+
   // Build MCP servers config: nanoclaw built-in + QMD HTTP + any from container.json
-  const mcpServers: Record<string, { command: string; args: string[]; env: Record<string, string> } | { type: 'http'; url: string }> = {
+  const mcpServers: Record<string, McpServerConfig> = {
     nanoclaw: {
       command: 'bun',
       args: ['run', mcpServerPath],
@@ -81,13 +84,13 @@ async function main(): Promise<void> {
     },
     qmd: {
       type: 'http',
-      url: 'http://host.docker.internal:8182/mcp',
+      url: QMD_URL,
     },
   };
 
   for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
     mcpServers[name] = serverConfig;
-    log(`Additional MCP server: ${name} (${serverConfig.command})`);
+    log(`Additional MCP server: ${name} (${'command' in serverConfig ? serverConfig.command : serverConfig.url})`);
   }
 
   const provider = createProvider(providerName, {
