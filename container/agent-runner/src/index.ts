@@ -72,12 +72,16 @@ async function main(): Promise<void> {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const mcpServerPath = path.join(__dirname, 'mcp-tools', 'index.ts');
 
-  // Build MCP servers config: nanoclaw built-in + any from container.json
-  const mcpServers: Record<string, { command: string; args: string[]; env: Record<string, string> }> = {
+  // Build MCP servers config: nanoclaw built-in + QMD HTTP + any from container.json
+  const mcpServers: Record<string, { command: string; args: string[]; env: Record<string, string> } | { type: 'http'; url: string }> = {
     nanoclaw: {
       command: 'bun',
       args: ['run', mcpServerPath],
       env: {},
+    },
+    qmd: {
+      type: 'http',
+      url: 'http://host.docker.internal:8182/mcp',
     },
   };
 
