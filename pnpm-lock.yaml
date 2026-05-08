@@ -32,9 +32,12 @@ importers:
       '@slack/bolt':
         specifier: ^4.6.0
         version: 4.7.2(@types/express@5.0.6)
+      '@types/qrcode':
+        specifier: 1.5.6
+        version: 1.5.6
       '@whiskeysockets/baileys':
-        specifier: ^7.0.0-rc.9
-        version: 7.0.0-rc10(sharp@0.34.5)
+        specifier: 7.0.0-rc.9
+        version: 7.0.0-rc.9(sharp@0.34.5)
       better-sqlite3:
         specifier: 11.10.0
         version: 11.10.0
@@ -59,8 +62,11 @@ importers:
       openai:
         specifier: ^4.77.0
         version: 4.104.0(ws@8.20.0)(zod@4.4.3)
+      pino:
+        specifier: 9.6.0
+        version: 9.6.0
       qrcode:
-        specifier: ^1.5.4
+        specifier: 1.5.4
         version: 1.5.4
       qrcode-terminal:
         specifier: ^0.12.0
@@ -619,9 +625,6 @@ packages:
   '@oxc-project/types@0.124.0':
     resolution: {integrity: sha512-VBFWMTBvHxS11Z5Lvlr3IWgrwhMTXV+Md+EQF0Xf60+wAdsGFTBx7X7K/hP4pi8N7dcm1RvcHwDxZ16Qx8keUg==}
 
-  '@pinojs/redact@0.4.0':
-    resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
-
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
 
@@ -865,6 +868,9 @@ packages:
   '@types/qrcode-terminal@0.12.2':
     resolution: {integrity: sha512-v+RcIEJ+Uhd6ygSQ0u5YYY7ZM+la7GgPbs0V/7l/kFs2uO4S8BcIUEMoP7za4DNIqNnUD5npf0A/7kBhrCKG5Q==}
 
+  '@types/qrcode@1.5.6':
+    resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
+
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
 
@@ -993,12 +999,12 @@ packages:
     resolution: {integrity: sha512-Xfe6rpCTxSxfbswi/W/Pz7zp1WWSNn4A0eW4mLkQUewCrXXtMj31lCg+iQyTkh/CkusZSq9eDflu7tjEDXUY6g==}
     engines: {node: '>=v14.0.0', npm: '>=7.0.0'}
 
-  '@whiskeysockets/baileys@7.0.0-rc10':
-    resolution: {integrity: sha512-tVHZRIE06HlQajHcLEsCa+gnH5z+dAXPjwHsGXDNY9/Y0iqbymQzHLvh4tMH/pi/ea/D617qCQhNkDT2B0tufg==}
+  '@whiskeysockets/baileys@7.0.0-rc.9':
+    resolution: {integrity: sha512-YFm5gKXfDP9byCXCW3OPHKXLzrAKzolzgVUlRosHHgwbnf2YOO3XknkMm6J7+F0ns8OA0uuSBhgkRHTDtqkacw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       audio-decode: ^2.1.3
-      jimp: ^1.6.1
+      jimp: ^1.6.0
       link-preview-js: ^3.0.0
       sharp: '*'
     peerDependenciesMeta:
@@ -1420,6 +1426,10 @@ packages:
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
+
+  fast-redact@3.5.0:
+    resolution: {integrity: sha512-dwsoQlS7h9hMeYUq1W++23NDcBLV4KqONnITDV9DjfS3q1SgDGVrBdvvTLUotWtPSD7asWDV9/CmsZPy8Hf70A==}
+    engines: {node: '>=6'}
 
   fast-string-truncated-width@1.2.1:
     resolution: {integrity: sha512-Q9acT/+Uu3GwGj+5w/zsGuQjh9O1TyywhIwAxHudtWrgF09nHOPrvTLhQevPbttcxjr/SNN7mJmfOw/B1bXgow==}
@@ -2196,8 +2206,8 @@ packages:
   pino-std-serializers@7.1.0:
     resolution: {integrity: sha512-BndPH67/JxGExRgiX1dX0w1FvZck5Wa4aal9198SrRhZjH3GxKQUKIBnYJTdj2HDN3UQAS06HlfcSbQj2OHmaw==}
 
-  pino@9.14.0:
-    resolution: {integrity: sha512-8OEwKp5juEvb/MjpIc4hjqfgCNysrS94RIOMXYvpYCdm/jglrKEiAYmiumbmGhCvs+IcInsphYDFwqrjr7398w==}
+  pino@9.6.0:
+    resolution: {integrity: sha512-i85pKRCt4qMjZ1+L7sy2Ag4t1atFcdbEt76+7iRJn1g2BvsnRMGu9p8pivl9fs63M2kF/A0OacFZhTub+m/qMg==}
     hasBin: true
 
   pngjs@5.0.0:
@@ -2223,8 +2233,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  process-warning@5.0.0:
-    resolution: {integrity: sha512-a39t9ApHNx2L4+HBnQKqxxHNs1r7KF+Intd8Q/g1bUh6q0WIp9voPXJ/x0j+ZL45KF1pJd9+q2jLIRMfvEshkA==}
+  process-warning@4.0.1:
+    resolution: {integrity: sha512-3c2LzQ3rY9d0hc1emcsHhfT9Jwz0cChib/QN89oME2R451w5fy3f0afAhERFZAwrbDU43wk12d0ORBpDVME50Q==}
 
   protobufjs@6.8.8:
     resolution: {integrity: sha512-AAmHtD5pXgZfi7GMpllpO3q1Xw1OYldr+dMUlAnffGTAhqkg72WdmSY71uKBF/JuyiKs8psYbtKrhi0ASCD8qw==}
@@ -2675,9 +2685,6 @@ packages:
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
-
-  whatsapp-rust-bridge@0.5.3:
-    resolution: {integrity: sha512-Xb3GAgtWQQJ30oI4a4pjM4+YUeli9CMLTwTIewUrb+AJMFElIkiT5uo+j1Zhc+amiV0Jj+LfX76c/EEZirJbGA==}
 
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
@@ -3178,8 +3185,6 @@ snapshots:
 
   '@oxc-project/types@0.124.0': {}
 
-  '@pinojs/redact@0.4.0': {}
-
   '@protobufjs/aspromise@1.1.2': {}
 
   '@protobufjs/base64@1.1.2': {}
@@ -3419,6 +3424,10 @@ snapshots:
 
   '@types/qrcode-terminal@0.12.2': {}
 
+  '@types/qrcode@1.5.6':
+    dependencies:
+      '@types/node': 22.19.17
+
   '@types/qs@6.15.1': {}
 
   '@types/range-parser@1.2.7': {}
@@ -3598,7 +3607,7 @@ snapshots:
 
   '@vladfrangu/async_event_emitter@2.4.7': {}
 
-  '@whiskeysockets/baileys@7.0.0-rc10(sharp@0.34.5)':
+  '@whiskeysockets/baileys@7.0.0-rc.9(sharp@0.34.5)':
     dependencies:
       '@cacheable/node-cache': 1.7.6
       '@hapi/boom': 9.1.4
@@ -3607,10 +3616,9 @@ snapshots:
       lru-cache: 11.3.6
       music-metadata: 11.12.3
       p-queue: 9.2.0
-      pino: 9.14.0
+      pino: 9.6.0
       protobufjs: 7.5.6
       sharp: 0.34.5
-      whatsapp-rust-bridge: 0.5.3
       ws: 8.20.0
     transitivePeerDependencies:
       - bufferutil
@@ -4097,6 +4105,8 @@ snapshots:
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
+
+  fast-redact@3.5.0: {}
 
   fast-string-truncated-width@1.2.1: {}
 
@@ -5011,14 +5021,14 @@ snapshots:
 
   pino-std-serializers@7.1.0: {}
 
-  pino@9.14.0:
+  pino@9.6.0:
     dependencies:
-      '@pinojs/redact': 0.4.0
       atomic-sleep: 1.0.0
+      fast-redact: 3.5.0
       on-exit-leak-free: 2.1.2
       pino-abstract-transport: 2.0.0
       pino-std-serializers: 7.1.0
-      process-warning: 5.0.0
+      process-warning: 4.0.1
       quick-format-unescaped: 4.0.4
       real-require: 0.2.0
       safe-stable-stringify: 2.5.0
@@ -5052,7 +5062,7 @@ snapshots:
 
   prettier@3.8.2: {}
 
-  process-warning@5.0.0: {}
+  process-warning@4.0.1: {}
 
   protobufjs@6.8.8:
     dependencies:
@@ -5556,8 +5566,6 @@ snapshots:
   web-streams-polyfill@4.0.0-beta.3: {}
 
   webidl-conversions@3.0.1: {}
-
-  whatsapp-rust-bridge@0.5.3: {}
 
   whatwg-url@5.0.0:
     dependencies:
