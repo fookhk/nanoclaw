@@ -19,3 +19,6 @@ import './whatsapp.js';
 
 // emacs
 import './emacs.js';
+
+// telegram
+import './telegram.js';
