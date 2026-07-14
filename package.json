@@ -27,8 +27,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@chat-adapter/discord": "4.27.0",
-    "@chat-adapter/slack": "4.27.0",
+    "@chat-adapter/discord": "4.29.0",
+    "@chat-adapter/slack": "4.29.0",
     "@chat-adapter/telegram": "4.27.0",
     "@chat-adapter/whatsapp": "4.27.0",
     "@clack/core": "^1.2.0",

@@ -11,13 +11,8 @@ import './cli.js';
 // discord
 import './discord.js';
 
-// gmail
-import './gmail.js';
-
 // slack
 import './slack.js';
-
-// telegram
 
 // whatsapp
 import './whatsapp.js';
