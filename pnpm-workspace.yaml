@@ -4,5 +4,9 @@ onlyBuiltDependencies:
   - protobufjs
   - sharp
 
+overrides:
+  uuid: '>=11.1.1'
+  js-yaml: '>=4.2.0'
+
 pnpm:
   minimumReleaseAge: 4320
