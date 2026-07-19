@@ -13,6 +13,7 @@ const envConfig = readEnvFile([
   'OLLAMA_ROUTER_ENABLED',
   'OLLAMA_URL',
   'OLLAMA_ROUTER_MODEL',
+  'OLLAMA_HOST',
   'ONECLI_URL',
   'ONECLI_API_KEY',
   'TZ',
@@ -55,6 +56,10 @@ export const OLLAMA_ADMIN_TOOLS = (process.env.OLLAMA_ADMIN_TOOLS || envConfig.O
 export const OLLAMA_ROUTER_ENABLED = (process.env.OLLAMA_ROUTER_ENABLED || envConfig.OLLAMA_ROUTER_ENABLED) === 'true';
 export const OLLAMA_URL = process.env.OLLAMA_URL || envConfig.OLLAMA_URL || 'http://localhost:11434';
 export const OLLAMA_ROUTER_MODEL = process.env.OLLAMA_ROUTER_MODEL || envConfig.OLLAMA_ROUTER_MODEL || 'llama3.2';
+// Base URL the ollama MCP server (container/agent-runner/src/ollama-mcp-stdio.ts) connects
+// to. Only forwarded to containers when set — the MCP server falls back to
+// http://host.docker.internal:11434 on its own otherwise.
+export const OLLAMA_HOST = process.env.OLLAMA_HOST || envConfig.OLLAMA_HOST || '';
 
 // Absolute paths needed for container mounts
 const PROJECT_ROOT = process.cwd();

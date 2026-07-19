@@ -21,6 +21,7 @@ import {
   LAZYLIBRARIAN_API_KEY,
   LAZYLIBRARIAN_URL,
   OLLAMA_ADMIN_TOOLS,
+  OLLAMA_HOST,
   ONECLI_API_KEY,
   ONECLI_URL,
   TIMEZONE,
@@ -460,6 +461,7 @@ async function buildContainerArgs(
   if (LAZYLIBRARIAN_URL) args.push('-e', `LAZYLIBRARIAN_URL=${LAZYLIBRARIAN_URL}`);
   if (LAZYLIBRARIAN_API_KEY) args.push('-e', `LAZYLIBRARIAN_API_KEY=${LAZYLIBRARIAN_API_KEY}`);
   if (OLLAMA_ADMIN_TOOLS) args.push('-e', `OLLAMA_ADMIN_TOOLS=true`);
+  if (OLLAMA_HOST) args.push('-e', `OLLAMA_HOST=${OLLAMA_HOST}`);
 
   // Provider-contributed env vars (e.g. XDG_DATA_HOME, OPENCODE_*, NO_PROXY).
   if (providerContribution.env) {
